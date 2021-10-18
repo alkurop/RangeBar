@@ -49,10 +49,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        rangebar.setOnRangeBarChangeListener { _, leftThumbIndex, rightThumbIndex ->
-            leftIndexValue.text = "$leftThumbIndex"
-            rightIndexValue.text = "$rightThumbIndex"
-        }
+        rangebar.setOnRangeBarChangeListener(object : RangeBar.OnRangeBarChangeListener {
+            override fun onIndexChangeListener(
+                rangeBar: RangeBar?,
+                leftThumbIndex: Int,
+                rightThumbIndex: Int
+            ) {
+                leftIndexValue.text = "$leftThumbIndex"
+                rightIndexValue.text = "$rightThumbIndex"
+            }
+        })
 
         // Sets the indices themselves upon input from the user
         refreshButton.setOnClickListener { // Gets the String values of all the texts
