@@ -180,27 +180,7 @@
                 android:layout_gravity="center"
                 android:text="@string/connectingLineColor" />
 
-            <Button
-                android:id="@+id/thumbColorNormal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/thumbColorNormal" />
 
-            <Button
-                android:id="@+id/thumbColorPressed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/thumbColorPressed" />
-
-            <Button
-                android:id="@+id/resetThumbColors"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/resetThumbColors"
-                android:textColor="@android:color/holo_red_light" />
         </LinearLayout>
     </LinearLayout>
 
