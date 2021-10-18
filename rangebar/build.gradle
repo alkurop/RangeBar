@@ -22,7 +22,6 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:$versions.support"
 }
 
 afterEvaluate {
