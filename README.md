@@ -35,7 +35,7 @@ Installation
 **build.gradle**
 
 	repositories {
-		mavenCentral()
+        maven { url 'https://jitpack.io' }
 	}
 
 	dependencies {
