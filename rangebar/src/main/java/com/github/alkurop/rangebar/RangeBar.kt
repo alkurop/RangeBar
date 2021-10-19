@@ -23,9 +23,20 @@ import kotlin.math.min
  * [RangeBar.OnRangeBarChangeListener] to be notified when the thumbs have
  * been moved.
  */
-class RangeBar : View {
+
+typealias OnRangeBarChangeListener = (RangeBar.Tick) -> Unit
+
+
+class RangeBar @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+    data class Tick(
+        val start: Int,
+        val end: Int,
+        val range: Int
+    )
+
     // Instance variables for all of the customizable attributes
-    private var mTickCount = DEFAULT_TICK_COUNT
     private var mTickHeightDP = DEFAULT_TICK_HEIGHT_DP
     private var mBarWeight = DEFAULT_BAR_WEIGHT_PX
     private var mBarColor = DEFAULT_BAR_COLOR
@@ -46,35 +57,15 @@ class RangeBar : View {
     private var mRightThumb: Thumb? = null
     private var mBar: Bar? = null
     private var mConnectingLine: ConnectingLine? = null
-    private var mListener: OnRangeBarChangeListener? = null
+    private var mListener: ((Tick) -> Unit)? = null
 
-    /**
-     * Gets the index of the left-most thumb.
-     *
-     * @return the 0-based index of the left thumb
-     */
-    var leftIndex = 0
-        private set
+    var tick = Tick(
+        start = 0,
+        end = DEFAULT_TICK_COUNT - 1,
+        range = DEFAULT_TICK_COUNT
+    )
 
-    /**
-     * Gets the index of the right-most thumb.
-     *
-     * @return the 0-based index of the right thumb
-     */
-    var rightIndex = mTickCount - 1
-        private set
-
-    // Constructors ////////////////////////////////////////////////////////////
-    constructor(context: Context?) : super(context) {}
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        rangeBarInit(context, attrs)
-    }
-
-    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(
-        context,
-        attrs,
-        defStyle
-    ) {
+    init {
         rangeBarInit(context, attrs)
     }
 
@@ -82,7 +73,7 @@ class RangeBar : View {
     public override fun onSaveInstanceState(): Parcelable? {
         val bundle = Bundle()
         bundle.putParcelable("instanceState", super.onSaveInstanceState())
-        bundle.putInt("TICK_COUNT", mTickCount)
+        bundle.putInt("TICK_COUNT", tick.range)
         bundle.putFloat("TICK_HEIGHT_DP", mTickHeightDP)
         bundle.putFloat("BAR_WEIGHT", mBarWeight)
         bundle.putInt("BAR_COLOR", mBarColor)
@@ -93,8 +84,8 @@ class RangeBar : View {
         bundle.putFloat("THUMB_RADIUS_DP", mThumbRadiusDP)
         bundle.putInt("THUMB_COLOR_NORMAL", mThumbColorNormal)
         bundle.putInt("THUMB_COLOR_PRESSED", mThumbColorPressed)
-        bundle.putInt("LEFT_INDEX", leftIndex)
-        bundle.putInt("RIGHT_INDEX", rightIndex)
+        bundle.putInt("LEFT_INDEX", tick.start)
+        bundle.putInt("RIGHT_INDEX", tick.end)
         bundle.putBoolean("FIRST_SET_TICK_COUNT", mFirstSetTickCount)
         return bundle
     }
@@ -102,7 +93,6 @@ class RangeBar : View {
     public override fun onRestoreInstanceState(state: Parcelable) {
         if (state is Bundle) {
             val bundle = state
-            mTickCount = bundle.getInt("TICK_COUNT")
             mTickHeightDP = bundle.getFloat("TICK_HEIGHT_DP")
             mBarWeight = bundle.getFloat("BAR_WEIGHT")
             mBarColor = bundle.getInt("BAR_COLOR")
@@ -113,10 +103,15 @@ class RangeBar : View {
             mThumbRadiusDP = bundle.getFloat("THUMB_RADIUS_DP")
             mThumbColorNormal = bundle.getInt("THUMB_COLOR_NORMAL")
             mThumbColorPressed = bundle.getInt("THUMB_COLOR_PRESSED")
-            leftIndex = bundle.getInt("LEFT_INDEX")
-            rightIndex = bundle.getInt("RIGHT_INDEX")
+            tick = Tick(
+                range = bundle.getInt("TICK_COUNT"),
+                start = bundle.getInt("LEFT_INDEX"),
+                end = bundle.getInt("RIGHT_INDEX")
+            )
             mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT")
-            setThumbIndices(leftIndex, rightIndex)
+            setThumbIndices(tick.start, tick.end)
+
+
             super.onRestoreInstanceState(bundle.getParcelable("instanceState"))
         } else {
             super.onRestoreInstanceState(state)
@@ -180,23 +175,22 @@ class RangeBar : View {
         val marginLeft = mLeftThumb!!.halfWidth / 4
         val barLength = w - 2 * marginLeft
         mBar =
-            Bar(ctx, marginLeft, yPos, barLength, mTickCount, mTickHeightDP, mBarWeight, mBarColor)
+            Bar(ctx, marginLeft, yPos, barLength, tick.range, mTickHeightDP, mBarWeight, mBarColor)
 
         // Initialize thumbs to the desired indices
-        mLeftThumb!!.x = marginLeft + leftIndex / (mTickCount - 1).toFloat() * barLength
-        mRightThumb!!.x = marginLeft + rightIndex / (mTickCount - 1).toFloat() * barLength
+        mLeftThumb!!.x = marginLeft + tick.start / (tick.range - 1).toFloat() * barLength
+        mRightThumb!!.x = marginLeft + tick.end / (tick.range - 1).toFloat() * barLength
 
         // Set the thumb indices.
-        val newLeftIndex = mBar!!.getNearestTickIndex(mLeftThumb!!)
-        val newRightIndex = mBar!!.getNearestTickIndex(mRightThumb!!)
+        val newTick = tick.copy(
+            start = mBar!!.getNearestTickIndex(mLeftThumb!!),
+            end = mBar!!.getNearestTickIndex(mRightThumb!!)
+        )
 
         // Call the listener.
-        if (newLeftIndex != leftIndex || newRightIndex != rightIndex) {
-            leftIndex = newLeftIndex
-            rightIndex = newRightIndex
-            if (mListener != null) {
-                mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-            }
+        if (newTick.start != tick.start || newTick.end != tick.end) {
+            tick = newTick
+            mListener?.invoke(tick)
         }
 
         // Create the line connecting the two thumbs.
@@ -253,25 +247,23 @@ class RangeBar : View {
      */
     fun setTickCount(tickCount: Int) {
         if (isValidTickCount(tickCount)) {
-            mTickCount = tickCount
+            tick = tick.copy(range = tickCount)
 
             // Prevents resetting the indices when creating new activity, but
             // allows it on the first setting.
             if (mFirstSetTickCount) {
-                leftIndex = 0
-                rightIndex = mTickCount - 1
-                if (mListener != null) {
-                    mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-                }
-            }
-            if (indexOutOfRange(leftIndex, rightIndex)) {
-                leftIndex = 0
-                rightIndex = mTickCount - 1
-                if (mListener != null) mListener!!.onIndexChangeListener(
-                    this,
-                    leftIndex,
-                    rightIndex
+                tick = tick.copy(
+                    start = 0,
+                    end = tick.range - 1
                 )
+                mListener?.invoke(tick)
+            }
+            if (indexOutOfRange(tick.start, tick.end)) {
+                tick = tick.copy(
+                    start = 0,
+                    end = tick.range - 1
+                )
+                mListener?.invoke(tick)
             }
             createBar()
             createThumbs()
@@ -393,7 +385,7 @@ class RangeBar : View {
 
     /**
      * Sets the location of each thumb according to the developer's choice.
-     * Numbered from 0 to mTickCount - 1 from the left.
+     * Numbered from 0 to tick.range - 1 from the left.
      *
      * @param leftThumbIndex Integer specifying the index of the left thumb
      * @param rightThumbIndex Integer specifying the index of the right thumb
@@ -402,17 +394,17 @@ class RangeBar : View {
         if (indexOutOfRange(leftThumbIndex, rightThumbIndex)) {
             Log.e(
                 TAG,
-                "A thumb index is out of bounds. Check that it is between 0 and mTickCount - 1"
+                "A thumb index is out of bounds. Check that it is between 0 and tick.range - 1"
             )
-            throw IllegalArgumentException("A thumb index is out of bounds. Check that it is between 0 and mTickCount - 1")
+            throw IllegalArgumentException("A thumb index is out of bounds. Check that it is between 0 and tick.range - 1")
         } else {
-            if (mFirstSetTickCount == true) mFirstSetTickCount = false
-            leftIndex = leftThumbIndex
-            rightIndex = rightThumbIndex
+            if (mFirstSetTickCount) mFirstSetTickCount = false
+            tick = tick.copy(
+                start = leftThumbIndex,
+                end = rightThumbIndex
+            )
             createThumbs()
-            if (mListener != null) {
-                mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-            }
+            mListener?.invoke(tick)
         }
         invalidate()
         requestLayout()
@@ -437,12 +429,12 @@ class RangeBar : View {
 
                 // Similar functions performed above in setTickCount; make sure
                 // you know how they interact
-                mTickCount = tickCount
-                leftIndex = 0
-                rightIndex = mTickCount - 1
-                if (mListener != null) {
-                    mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-                }
+                tick = tick.copy(
+                    range = tickCount,
+                    start = 0,
+                    end = tickCount - 1
+                )
+                mListener?.invoke(tick)
             } else {
                 Log.e(TAG, "tickCount less than 2; invalid tickCount. XML input ignored.")
             }
@@ -489,7 +481,7 @@ class RangeBar : View {
             marginLeft,
             yPos,
             barLength,
-            mTickCount,
+            tick.range,
             mTickHeightDP,
             mBarWeight,
             mBarColor
@@ -541,8 +533,8 @@ class RangeBar : View {
         val barLength = barLength
 
         // Initialize thumbs to the desired indices
-        mLeftThumb!!.x = marginLeft + leftIndex / (mTickCount - 1).toFloat() * barLength
-        mRightThumb!!.x = marginLeft + rightIndex / (mTickCount - 1).toFloat() * barLength
+        mLeftThumb!!.x = marginLeft + tick.start / (tick.range - 1).toFloat() * barLength
+        mRightThumb!!.x = marginLeft + tick.end / (tick.range - 1).toFloat() * barLength
         invalidate()
     }
 
@@ -581,7 +573,7 @@ class RangeBar : View {
      * @return boolean If the index is out of range.
      */
     private fun indexOutOfRange(leftThumbIndex: Int, rightThumbIndex: Int): Boolean {
-        return leftThumbIndex < 0 || leftThumbIndex >= mTickCount || rightThumbIndex < 0 || rightThumbIndex >= mTickCount
+        return leftThumbIndex < 0 || leftThumbIndex >= tick.range || rightThumbIndex < 0 || rightThumbIndex >= tick.range
     }
 
     /**
@@ -630,18 +622,14 @@ class RangeBar : View {
                 mRightThumb!!.x = x
                 releaseThumb(mRightThumb)
             }
-
-            // Get the updated nearest tick marks for each thumb.
-            val newLeftIndex = mBar!!.getNearestTickIndex(mLeftThumb!!)
-            val newRightIndex = mBar!!.getNearestTickIndex(mRightThumb!!)
-
+            val newTick = tick.copy(
+                start = mBar!!.getNearestTickIndex(mLeftThumb!!),
+                end = mBar!!.getNearestTickIndex(mRightThumb!!)
+            )
             // If either of the indices have changed, update and call the listener.
-            if (newLeftIndex != leftIndex || newRightIndex != rightIndex) {
-                leftIndex = newLeftIndex
-                rightIndex = newRightIndex
-                if (mListener != null) {
-                    mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-                }
+            if (newTick.start != tick.start || newTick.end != tick.end) {
+                tick = newTick
+                mListener?.invoke(tick)
             }
         }
     }
@@ -668,16 +656,16 @@ class RangeBar : View {
         }
 
         // Get the updated nearest tick marks for each thumb.
-        val newLeftIndex = mBar!!.getNearestTickIndex(mLeftThumb!!)
-        val newRightIndex = mBar!!.getNearestTickIndex(mRightThumb!!)
+
+        val newTick = tick.copy(
+            start = mBar!!.getNearestTickIndex(mLeftThumb!!),
+            end = mBar!!.getNearestTickIndex(mRightThumb!!)
+        )
 
         // If either of the indices have changed, update and call the listener.
-        if (newLeftIndex != leftIndex || newRightIndex != rightIndex) {
-            leftIndex = newLeftIndex
-            rightIndex = newRightIndex
-            if (mListener != null) {
-                mListener!!.onIndexChangeListener(this, leftIndex, rightIndex)
-            }
+        if (newTick.start != tick.start || newTick.end != tick.end) {
+            tick = newTick
+            mListener?.invoke(tick)
         }
     }
 
@@ -729,10 +717,6 @@ class RangeBar : View {
      * listener will only be called when either thumb's index has changed - not
      * for every movement of the thumb.
      */
-    interface OnRangeBarChangeListener {
-        fun onIndexChangeListener(rangeBar: RangeBar?, leftThumbIndex: Int, rightThumbIndex: Int)
-    }
-
     companion object {
         // Member Variables ////////////////////////////////////////////////////////
         private const val TAG = "RangeBar"

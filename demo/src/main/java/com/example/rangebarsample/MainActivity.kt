@@ -32,8 +32,8 @@ class MainActivity : AppCompatActivity() {
     override fun onRestoreInstanceState(bundle: Bundle) {
         super.onRestoreInstanceState(bundle)
         // Resets the index values every time the activity is changed
-        leftIndexValue.text = "${rangebar.leftIndex}"
-        rightIndexValue.text = "${rangebar!!.rightIndex}"
+        leftIndexValue.text = "${rangebar.tick.start}"
+        rightIndexValue.text = "${rangebar!!.tick.end}"
         // Sets focus to the main layout, not the index text fields
         findViewById<View>(R.id.mylayout).requestFocus()
     }
@@ -49,16 +49,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        rangebar.setOnRangeBarChangeListener(object : RangeBar.OnRangeBarChangeListener {
-            override fun onIndexChangeListener(
-                rangeBar: RangeBar?,
-                leftThumbIndex: Int,
-                rightThumbIndex: Int
-            ) {
-                leftIndexValue.text = "$leftThumbIndex"
-                rightIndexValue.text = "$rightThumbIndex"
-            }
-        })
+        rangebar.setOnRangeBarChangeListener { tick ->
+            leftIndexValue.text = "${tick.start}"
+            rightIndexValue.text = "${tick.end}"
+        }
+
 
         // Sets the indices themselves upon input from the user
         refreshButton.setOnClickListener { // Gets the String values of all the texts
