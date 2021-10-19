@@ -1,4 +1,4 @@
-package com.edmodo.rangebar
+package com.github.alkurop.rangebar
 
 import android.view.View
 
