@@ -32,15 +32,7 @@ https://github.com/edmodo/range-bar/wiki
 Installation
 =======
 
-**build.gradle**
-
-	repositories {
-        maven { url 'https://jitpack.io' }
-	}
-
-	dependencies {
-	  compile 'com.edmodo:rangebar:1.0.0'
-	}
+[![](https://jitpack.io/v/alkurop/RangeBar.svg)](https://jitpack.io/#alkurop/RangeBar)
 
 License
 =======
