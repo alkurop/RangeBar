@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import kotlin.math.min
 
 /**
  * The RangeBar is a double-sided version of a [android.widget.SeekBar]
@@ -133,21 +134,17 @@ class RangeBar : View {
         val measureHeight = MeasureSpec.getSize(heightMeasureSpec)
 
         // The RangeBar width should be as large as possible.
-        width = if (measureWidthMode == MeasureSpec.AT_MOST) {
-            measureWidth
-        } else if (measureWidthMode == MeasureSpec.EXACTLY) {
-            measureWidth
-        } else {
-            mDefaultWidth
+        width = when (measureWidthMode) {
+            MeasureSpec.AT_MOST -> measureWidth
+            MeasureSpec.EXACTLY -> measureWidth
+            else -> mDefaultWidth
         }
 
         // The RangeBar height should be as small as possible.
-        height = if (measureHeightMode == MeasureSpec.AT_MOST) {
-            Math.min(mDefaultHeight, measureHeight)
-        } else if (measureHeightMode == MeasureSpec.EXACTLY) {
-            measureHeight
-        } else {
-            mDefaultHeight
+        height = when (measureHeightMode) {
+            MeasureSpec.AT_MOST -> min(mDefaultHeight, measureHeight)
+            MeasureSpec.EXACTLY -> measureHeight
+            else -> mDefaultHeight
         }
         setMeasuredDimension(width, height)
     }
@@ -180,7 +177,7 @@ class RangeBar : View {
         )
 
         // Create the underlying bar.
-        val marginLeft = mLeftThumb!!.halfWidth
+        val marginLeft = mLeftThumb!!.halfWidth / 4
         val barLength = w - 2 * marginLeft
         mBar =
             Bar(ctx, marginLeft, yPos, barLength, mTickCount, mTickHeightDP, mBarWeight, mBarColor)
@@ -541,7 +538,6 @@ class RangeBar : View {
             mThumbImageNormal,
             mThumbImagePressed
         )
-        val marginLeft = marginLeft
         val barLength = barLength
 
         // Initialize thumbs to the desired indices
