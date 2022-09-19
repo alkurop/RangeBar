@@ -175,7 +175,7 @@ class RangeBar @JvmOverloads constructor(
         )
 
         // Create the underlying bar.
-        val marginLeft = mLeftThumb!!.halfWidth
+        val marginLeft = mLeftThumb!!.halfWidth/2
         val barLength = w - 2 * marginLeft
         mBar =
             Bar(ctx, marginLeft, yPos, barLength, tick.range, mTickHeightDP, mBarWeight, mBarColor)
@@ -533,7 +533,7 @@ class RangeBar @JvmOverloads constructor(
             mThumbImageNormal,
             mThumbImagePressed
         )
-        val marginLeft = marginLeft
+//        val marginLeft = marginLeft
         val barLength = barLength
 
         // Initialize thumbs to the desired indices

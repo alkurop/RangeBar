@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         app:barWeight="1dp"
         android:background="@color/colorAccent"
-        app:thumbRadius="2dp"
+        app:thumbRadius="5dp"
         app:tickCount="200"
         app:connectingLineWeight="1dp"
         app:tickHeight="0dp" />
