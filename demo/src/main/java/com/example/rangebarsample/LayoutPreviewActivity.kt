@@ -10,12 +10,16 @@ class LayoutPreviewActivity : AppCompatActivity(R.layout.activity_layout_preview
     val bar by lazy { findViewById<RangeBar>(R.id.bar) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        findViewById<View>(R.id.activate).setOnClickListener {
+            bar.isActivated = !bar.isActivated
+        }
         findViewById<View>(R.id.reset).setOnClickListener {
             bar.setThumbIndices(0, 199)
         }
         bar.setOnRangeBarChangeListener {
             it
         }
+
     }
 
 }

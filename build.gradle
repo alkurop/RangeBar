@@ -2,16 +2,16 @@
 
 buildscript {
     apply from: 'versions.gradle'
-    ext.compileSdk = 31
+    ext.compileSdk = 33
     ext.minSdk = 21
-    ext.targetSdk = 31
+    ext.targetSdk = 33
 
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
     }
 }
