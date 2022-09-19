@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.min
 
 /**
  * The RangeBar is a double-sided version of a [android.widget.SeekBar]
@@ -129,17 +128,21 @@ class RangeBar @JvmOverloads constructor(
         val measureHeight = MeasureSpec.getSize(heightMeasureSpec)
 
         // The RangeBar width should be as large as possible.
-        width = when (measureWidthMode) {
-            MeasureSpec.AT_MOST -> measureWidth
-            MeasureSpec.EXACTLY -> measureWidth
-            else -> mDefaultWidth
+        width = if (measureWidthMode == MeasureSpec.AT_MOST) {
+            measureWidth
+        } else if (measureWidthMode == MeasureSpec.EXACTLY) {
+            measureWidth
+        } else {
+            mDefaultWidth
         }
 
         // The RangeBar height should be as small as possible.
-        height = when (measureHeightMode) {
-            MeasureSpec.AT_MOST -> min(mDefaultHeight, measureHeight)
-            MeasureSpec.EXACTLY -> measureHeight
-            else -> mDefaultHeight
+        height = if (measureHeightMode == MeasureSpec.AT_MOST) {
+            Math.min(mDefaultHeight, measureHeight)
+        } else if (measureHeightMode == MeasureSpec.EXACTLY) {
+            measureHeight
+        } else {
+            mDefaultHeight
         }
         setMeasuredDimension(width, height)
     }
@@ -172,7 +175,7 @@ class RangeBar @JvmOverloads constructor(
         )
 
         // Create the underlying bar.
-        val marginLeft = mLeftThumb!!.halfWidth / 4
+        val marginLeft = mLeftThumb!!.halfWidth
         val barLength = w - 2 * marginLeft
         mBar =
             Bar(ctx, marginLeft, yPos, barLength, tick.range, mTickHeightDP, mBarWeight, mBarColor)
@@ -530,6 +533,7 @@ class RangeBar @JvmOverloads constructor(
             mThumbImageNormal,
             mThumbImagePressed
         )
+        val marginLeft = marginLeft
         val barLength = barLength
 
         // Initialize thumbs to the desired indices
