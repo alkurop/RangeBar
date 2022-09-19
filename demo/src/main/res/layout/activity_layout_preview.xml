@@ -5,14 +5,21 @@
     android:orientation="vertical">
 
     <com.github.alkurop.rangebar.RangeBar xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/bar"
         android:layout_width="wrap_content"
-        android:padding="2dp"
         android:layout_height="wrap_content"
-        app:barWeight="1dp"
         android:background="@color/colorAccent"
+        android:padding="2dp"
+        app:barWeight="1dp"
+        app:connectingLineWeight="1dp"
         app:thumbRadius="5dp"
         app:tickCount="200"
-        app:connectingLineWeight="1dp"
         app:tickHeight="0dp" />
+
+    <Button
+        android:id="@+id/reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="reset" />
 
 </LinearLayout>
