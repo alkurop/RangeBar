@@ -46,6 +46,7 @@ class RangeBar @JvmOverloads constructor(
     private var mThumbRadiusDP = DEFAULT_THUMB_RADIUS_DP
     private var mThumbColorNormal = DEFAULT_THUMB_COLOR_NORMAL
     private var mThumbColorPressed = DEFAULT_THUMB_COLOR_PRESSED
+    private var deactivateAlpha = DEFAULT_DEACTIVATE_ALPHA
 
     // setTickCount only resets indices before a thumb has been pressed or a
     // setThumbIndices() is called, to correspond with intended usage
@@ -66,6 +67,13 @@ class RangeBar @JvmOverloads constructor(
 
     init {
         rangeBarInit(context, attrs)
+        isActivated = true
+    }
+
+    override fun setActivated(activated: Boolean) {
+        super.setActivated(activated)
+        alpha = if (activated) 1f else deactivateAlpha
+        isClickable = isActivated
     }
 
     // View Methods ////////////////////////////////////////////////////////////
@@ -86,6 +94,7 @@ class RangeBar @JvmOverloads constructor(
         bundle.putInt("LEFT_INDEX", tick.start)
         bundle.putInt("RIGHT_INDEX", tick.end)
         bundle.putBoolean("FIRST_SET_TICK_COUNT", mFirstSetTickCount)
+        bundle.putBoolean("IS_ACTIVATED", isActivated)
         return bundle
     }
 
@@ -109,7 +118,7 @@ class RangeBar @JvmOverloads constructor(
             )
             mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT")
             setThumbIndices(tick.start, tick.end)
-
+            isActivated = bundle.getBoolean("IS_ACTIVATED")
 
             super.onRestoreInstanceState(bundle.getParcelable("instanceState"))
         } else {
@@ -468,6 +477,10 @@ class RangeBar @JvmOverloads constructor(
                 R.styleable.RangeBar_thumbColorPressed,
                 DEFAULT_THUMB_COLOR_PRESSED
             )
+            deactivateAlpha  = ta.getFloat(
+                R.styleable.RangeBar_deactivateAlpha,
+                DEFAULT_DEACTIVATE_ALPHA
+            )
         } finally {
             ta.recycle()
         }
@@ -613,6 +626,7 @@ class RangeBar @JvmOverloads constructor(
      * @param y the y-coordinate of the up action
      */
     private fun onActionUp(x: Float, y: Float) {
+        if (!isActivated) return
         if (mLeftThumb!!.isPressed) {
             releaseThumb(mLeftThumb)
         } else if (mRightThumb!!.isPressed) {
@@ -645,7 +659,7 @@ class RangeBar @JvmOverloads constructor(
      * @param x the x-coordinate of the move event
      */
     private fun onActionMove(x: Float) {
-
+        if (!isActivated) return
         // Move the pressed thumb to the new x-position.
         if (mLeftThumb!!.isPressed) {
             moveThumb(mLeftThumb, x)
@@ -746,5 +760,6 @@ class RangeBar @JvmOverloads constructor(
         private const val DEFAULT_THUMB_RADIUS_DP = -1f
         private const val DEFAULT_THUMB_COLOR_NORMAL = -1
         private const val DEFAULT_THUMB_COLOR_PRESSED = -1
+        private const val DEFAULT_DEACTIVATE_ALPHA = 0.5f
     }
 }

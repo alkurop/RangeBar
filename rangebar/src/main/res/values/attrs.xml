@@ -2,6 +2,7 @@
 
     <declare-styleable name="RangeBar">
         <attr name="tickCount" format="integer" />
+        <attr name="deactivateAlpha" format="float" />
         <attr name="tickHeight" format="dimension" />
         <attr name="barWeight" format="dimension" />
         <attr name="barColor" format="reference|color" />

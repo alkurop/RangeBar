@@ -12,6 +12,7 @@
         android:padding="2dp"
         app:barWeight="1dp"
         app:connectingLineWeight="1dp"
+        app:deactivateAlpha="0.1"
         app:thumbRadius="5dp"
         app:tickCount="200"
         app:tickHeight="0dp" />
@@ -21,5 +22,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="reset" />
+
+    <Button
+        android:id="@+id/activate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="activate" />
 
 </LinearLayout>
